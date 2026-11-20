@@ -196,6 +196,7 @@ Outro</textarea>
       <h2>Restaurar cópia</h2>
       <p class="muted small">Cole o texto da cópia. Substitui os dados atuais deste aparelho.</p>
       <textarea id="cIn" style="min-height:90px"></textarea>
+      <div class="row"><button class="btn" id="cFl">Escolher ficheiro da cópia</button><input type="file" id="cFi" accept=".txt,.json,text/plain,application/json" hidden></div>
       <div class="row"><button class="btn danger" id="cRes">Restaurar</button></div>
       <div id="cAsk" class="note bad" hidden><p>Substituir os dados atuais por esta cópia?</p><div class="row" style="margin-top:8px"><button class="btn danger" id="cYes">Sim, restaurar</button><button class="btn" id="cNo">Não</button></div></div>
       <div id="cMsg2" class="note ok" hidden></div>
@@ -1647,6 +1648,10 @@ __MODS.aud=function(R){
   $('cGen').onclick=function(){$('cOut').value=backup();note($('cMsg'),true,'Cópia gerada. Copie-a ou partilhe-a como ficheiro.');};
   $('cCopy').onclick=function(){if(!$('cOut').value)$('cOut').value=backup();copyText($('cOut').value,$('cMsg'),'Copiado. Guarde-o numa nota ou num e-mail para si.');};
   $('cFile').onclick=function(){if(!$('cOut').value)$('cOut').value=backup();shareFile($('cOut').value,'Cópia F&B Campo','fbcampo_copia','txt',$('cMsg'));};
+  $('cFl').onclick=function(){$('cFi').click();};
+  $('cFi').onchange=function(){var f=this.files&&this.files[0],box=this;if(!f)return;
+    f.arrayBuffer().then(function(buf){$('cIn').value=decode(buf).trim();box.value='';$('cAsk').hidden=false;var m=$('cMsg2');m.hidden=false;m.className='note ok';m.textContent='Ficheiro lido. Confirme abaixo para restaurar.';},
+      function(){var m=$('cMsg2');m.hidden=false;m.className='note bad';m.textContent='Não consegui ler o ficheiro.';box.value='';});};
   $('cRes').onclick=function(){$('cAsk').hidden=false;};
   $('cNo').onclick=function(){$('cAsk').hidden=true;};
   $('cYes').onclick=function(){
