@@ -201,6 +201,13 @@ Outro</textarea>
       <div id="cAsk" class="note bad" hidden><p>Substituir os dados atuais por esta cópia?</p><div class="row" style="margin-top:8px"><button class="btn danger" id="cYes">Sim, restaurar</button><button class="btn" id="cNo">Não</button></div></div>
       <div id="cMsg2" class="note ok" hidden></div>
     </div>
+    <div class="card">
+      <h2>Novo cliente</h2>
+      <p class="muted small">Apaga todos os registos, listas e respostas deste aparelho, em todos os módulos. Gere a cópia de segurança antes, se quiser guardar este cliente. Depois carregue as tabelas do novo cliente em Listas de dados.</p>
+      <div class="row"><button class="btn danger" id="nBtn">Começar do zero</button></div>
+      <div id="nAsk" class="note bad" hidden><p>Apagar TODOS os dados deste aparelho? Não é possível desfazer.</p><div class="row" style="margin-top:8px"><button class="btn danger" id="nYes">Sim, apagar tudo</button><button class="btn" id="nNo">Não</button></div></div>
+      <div id="nMsg" class="note ok" hidden></div>
+    </div>
   </div>
 </div>
 
@@ -1652,6 +1659,11 @@ __MODS.aud=function(R){
   $('cFi').onchange=function(){var f=this.files&&this.files[0],box=this;if(!f)return;
     f.arrayBuffer().then(function(buf){$('cIn').value=decode(buf).trim();box.value='';$('cAsk').hidden=false;var m=$('cMsg2');m.hidden=false;m.className='note ok';m.textContent='Ficheiro lido. Confirme abaixo para restaurar.';},
       function(){var m=$('cMsg2');m.hidden=false;m.className='note bad';m.textContent='Não consegui ler o ficheiro.';box.value='';});};
+  $('nBtn').onclick=function(){$('nAsk').hidden=false;};
+  $('nNo').onclick=function(){$('nAsk').hidden=true;};
+  $('nYes').onclick=function(){$('nAsk').hidden=true;
+    Object.keys(KEYS).forEach(function(k){try{localStorage.removeItem(KEYS[k]);}catch(e){}});
+    unmountAll();$('cOut').value='';var m=$('nMsg');m.hidden=false;m.className='note ok';m.textContent='Tudo apagado. Vá a Listas de dados e carregue as tabelas do novo cliente (Abrir ficheiros).';};
   $('cRes').onclick=function(){$('cAsk').hidden=false;};
   $('cNo').onclick=function(){$('cAsk').hidden=true;};
   $('cYes').onclick=function(){
