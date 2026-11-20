@@ -126,6 +126,13 @@ nav.n4{grid-template-columns:repeat(4,1fr)}
   <div id="scr-dados" class="screen" hidden>
     <div class="topbar"><button class="btn" data-go="home">← Menu</button><b>Listas de dados</b></div>
     <p class="muted small">Carregue aqui uma só vez. Os produtos, as receitas, os fornecedores e os outlets passam para todos os módulos. Os registos já guardados mantêm-se.</p>
+    <div class="card sel">
+      <h2>Abrir ficheiros do telemóvel ou do Google Drive</h2>
+      <p class="muted small">Escolha um ou vários ficheiros .txt com as tabelas copiadas do Excel (com cabeçalhos). A app reconhece sozinha se é de produtos, receitas ou fornecedores. No seletor do Android, abra o menu e escolha Drive.</p>
+      <input type="file" id="pF" accept=".txt,.tsv,.csv,text/plain,text/csv,text/tab-separated-values" multiple style="display:none">
+      <div class="row"><button class="btn primary" id="bF">Abrir ficheiros</button></div>
+      <div id="mF" class="note ok" hidden></div>
+    </div>
     <div class="card">
       <h2>Produtos (10_PRODUTOS)</h2>
       <p class="muted small">Copie a tabela da 10_PRODUTOS com cabeçalhos. Serve o Inventário, o Desperdício, as Compras e os produtos vendáveis diretamente.</p>
@@ -1581,6 +1588,37 @@ __MODS.aud=function(R){
     s=ensure('prod');s.outs=L;store('prod',s);
     s=ensure('fecho');s.outs=L;if(L.indexOf(s.outlet)<0)s.outlet=L[0];store('fecho',s);
     unmountAll();msg('mO',true,L.length+' outlets aplicados ao Desperdício, à Produção e às Vendas.');
+  };
+
+  /* abrir ficheiros (telemóvel / Drive) */
+  function decode(buf){
+    var u=new Uint8Array(buf);
+    if(u[0]===0xFF&&u[1]===0xFE)return new TextDecoder('utf-16le').decode(buf);
+    if(u[0]===0xFE&&u[1]===0xFF)return new TextDecoder('utf-16be').decode(buf);
+    try{return new TextDecoder('utf-8',{fatal:true}).decode(buf).replace(/^\uFEFF/,'');}catch(e){return new TextDecoder('windows-1252').decode(buf);}
+  }
+  function kindOf(text){
+    var first=(text.replace(/\r/g,'').split('\n').filter(function(l){return l.trim();})[0]||''),h=norm(first);
+    if(h.indexOf('codigo produto')>=0)return 'P';
+    if(h.indexOf('codigo receita')>=0)return 'R';
+    if(h.indexOf('codigo fornecedor')>=0||/^fornecedor\b/.test(h))return 'S';
+    return '';
+  }
+  $('bF').onclick=function(){$('pF').click();};
+  $('pF').onchange=function(){
+    var files=[].slice.call(this.files||[]),m=$('mF'),log=[],box=this;
+    if(!files.length)return;
+    m.hidden=false;m.className='note ok';m.textContent='A ler '+files.length+' ficheiro(s)...';
+    var chain=Promise.resolve();
+    files.forEach(function(f){chain=chain.then(function(){return f.arrayBuffer().then(function(buf){
+      var t=decode(buf),k=kindOf(t);
+      if(!k){log.push(f.name+': não reconheci a tabela (falta o cabeçalho Código Produto, Código Receita ou Fornecedor).');return;}
+      var id=k==='P'?'pP':k==='R'?'pR':'pS',btn=k==='P'?'bP':k==='R'?'bR':'bS',res=k==='P'?'mP':k==='R'?'mR':'mS';
+      $(id).value=t;$(btn).click();
+      log.push(f.name+': '+(k==='P'?'produtos':k==='R'?'receitas':'fornecedores')+'. '+$(res).textContent);
+    });});});
+    chain.then(function(){m.hidden=false;m.className='note ok';m.textContent=log.join('\n');m.style.whiteSpace='pre-wrap';box.value='';},
+      function(){m.hidden=false;m.className='note bad';m.textContent='Não consegui ler o ficheiro. Experimente descarregá-lo para o telemóvel e abrir de lá.';box.value='';});
   };
 
   /* cópia de segurança */
