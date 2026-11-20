@@ -1646,7 +1646,7 @@ __MODS.aud=function(R){
   function backup(){var d={};Object.keys(KEYS).forEach(function(k){var s=load(k);if(s)d[KEYS[k]]=s;});return JSON.stringify({fbcampo:1,data:d});}
   $('cGen').onclick=function(){$('cOut').value=backup();note($('cMsg'),true,'Cópia gerada. Copie-a ou partilhe-a como ficheiro.');};
   $('cCopy').onclick=function(){if(!$('cOut').value)$('cOut').value=backup();copyText($('cOut').value,$('cMsg'),'Copiado. Guarde-o numa nota ou num e-mail para si.');};
-  $('cFile').onclick=function(){if(!$('cOut').value)$('cOut').value=backup();shareFile($('cOut').value,'Cópia F&B Campo','fbcampo_copia','json',$('cMsg'));};
+  $('cFile').onclick=function(){if(!$('cOut').value)$('cOut').value=backup();shareFile($('cOut').value,'Cópia F&B Campo','fbcampo_copia','txt',$('cMsg'));};
   $('cRes').onclick=function(){$('cAsk').hidden=false;};
   $('cNo').onclick=function(){$('cAsk').hidden=true;};
   $('cYes').onclick=function(){
