@@ -456,6 +456,7 @@ __MODS.desp=function(R){
     opts($('outlet'),S.lists.outlets,S.last.outlet);
     opts($('tipo'),S.lists.tipos,S.last.tipo);
     opts($('causa'),S.lists.causas,S.last.causa);
+    [['tipo','Escolha o tipo…'],['causa','Escolha a causa…']].forEach(function(x){if(!S.last[x[0]]){$(x[0]).insertAdjacentHTML('afterbegin','<option value="">'+x[1]+'</option>');$(x[0]).value='';}});
     $('lOut').value=S.lists.outlets.join('\n');$('lTipo').value=S.lists.tipos.join('\n');$('lCausa').value=S.lists.causas.join('\n');
   }
   function stats(){
@@ -508,6 +509,7 @@ __MODS.desp=function(R){
     if(!cur)return;
     var raw=$('qty').value.trim().replace(/\s/g,'').replace(',','.'),v=Number(raw),m=$('fMsg');
     if(raw===''||isNaN(v)||v<=0){m.hidden=false;m.textContent='Indique uma quantidade maior que zero.';return;}
+    if(!$('tipo').value||!$('causa').value){m.hidden=false;m.textContent='Escolha o tipo e a causa do desperdício.';return;}
     var u=$('unit').value.trim()||cur.unit,rec={date:$('date').value,outlet:$('outlet').value,code:cur.code,qty:v,unit:u,tipo:$('tipo').value,causa:$('causa').value};
     if(editing){S.entries=S.entries.filter(function(k){return k.id!==editing;});}
     rec.id=S.nid++;S.entries.push(rec);
@@ -641,7 +643,7 @@ __MODS.comp=function(R){
   var S=null;try{S=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}
   if(!S||!S.products||!S.sups)S=example();
   function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
-  var cur=null,editing=null;
+  var cur=null,editing=null,warnKey=null;
   function fmt(n,dp){var f=Math.pow(10,dp);return String(Math.round(n*f)/f).replace('.',S.dec||',');}
   function pct(v){return fmt(v*100,2)+'%';}
   function num(x){var r=String(x).trim().replace(/\s/g,'').replace('%','').replace(',','.');return r===''?NaN:Number(r);}
@@ -694,7 +696,7 @@ __MODS.comp=function(R){
   ['qty','price','disc'].forEach(function(i){$(i).oninput=liveTotal;});
   function pick(code,entry){
     var p=find(code);if(!p&&!entry)return;
-    cur=p||{code:code,name:code,unit:''};editing=entry?entry.id:null;
+    cur=p||{code:code,name:code,unit:''};editing=entry?entry.id:null;warnKey=null;
     $('form').hidden=false;$('fName').textContent=cur.name;
     $('fMeta').textContent=cur.code+' · quantidade e preço por «'+cur.unit+'» (unidade de compra)'+(entry?' · a editar a linha '+entry.line:'');
     $('qty').value=entry?fmt(entry.qty,3):'';
@@ -714,6 +716,12 @@ __MODS.comp=function(R){
     if(isNaN(p)||p<0)return bad('Indique o preço unitário (0 ou mais).');
     if(isNaN(d)||d<0||d>100)return bad('Desconto entre 0 e 100.');
     if(isNaN(v)||v<0||v>100)return bad('IVA entre 0 e 100.');
+    var aviso=[];
+    if(p===0)aviso.push('Preço unitário 0: só deve ser 0 numa oferta ou amostra, porque baixa o custo médio do produto.');
+    if([0,6,13,23].indexOf(v)<0)aviso.push('IVA de '+fmt(v,2)+' %: não é uma taxa habitual (0, 6, 13 ou 23).');
+    var chave=[cur.code,q,p,d,v].join('|');
+    if(aviso.length&&warnKey!==chave){warnKey=chave;return bad(aviso.join(' ')+' Se estiver certo, carregue em Guardar outra vez.');}
+    warnKey=null;
     var rec={date:$('date').value,doc:doc,sup:$('sup').value,code:cur.code,qty:q,price:p,disc:d/100,iva:v/100};
     if(editing){var old=S.entries.filter(function(k){return k.id===editing;})[0];rec.line=old?old.line:null;S.entries=S.entries.filter(function(k){return k.id!==editing;});}
     if(!rec.line){var mx=0;S.entries.forEach(function(k){if(samedoc(k.doc,doc)&&k.line>mx)mx=k.line;});rec.line=mx+1;}
